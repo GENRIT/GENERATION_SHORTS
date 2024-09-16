@@ -1,114 +1,55 @@
-import random
-import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypesimport os
-import random
 import telebot
+import os
+import random
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
-# Папка с видеофайлами
-VIDEO_FOLDER = "videos"
+# Инициализация бота с вашим токеном
+API_TOKEN = '7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro'
+bot = telebot.TeleBot(API_TOKEN)
 
-# Инициализация бота
-bot_token = "7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro"  # Замените на токен вашего бота
-bot = telebot.TeleBot(bot_token)
+# Путь к директории с видео
+VIDEO_DIR = 'videos'  # В эту папку загружаются видеофайлы
 
-# Функция для создания случайного видео
-def create_random_video(output_file):
-    # Получаем все видеофайлы из папки
-    video_files = [os.path.join(VIDEO_FOLDER, f) for f in os.listdir(VIDEO_FOLDER) if f.endswith(".mp4")]
-
-    # Выбираем случайное количество видео
-    random_videos = random.sample(video_files, random.randint(2, len(video_files)))
-
-    clips = []
-    for video in random_videos:
-        clip = VideoFileClip(video)
-        # Устанавливаем случайное время воспроизведения для каждого видео
-        duration = random.uniform(1, min(clip.duration, 10))  # случайная длина отрезка (1-10 секунд)
-        start_time = random.uniform(0, clip.duration - duration)
-        clip = clip.subclip(start_time, start_time + duration)
-        clips.append(clip)
-
-    # Объединяем все клипы в один
-    final_clip = concatenate_videoclips(clips, method="compose")
-    final_clip.write_videofile(output_file, codec="libx264")
-
-# Обработчик команды /start
+# Команда start
 @bot.message_handler(commands=['start'])
-def start_message(message):
-    bot.send_message(message.chat.id, "Привет! Отправь команду /create, чтобы создать случайное видео.")
+def send_welcome(message):
+    bot.reply_to(message, "Привет! Отправь команду /create для создания рандомного видео.")
 
-# Обработчик команды /create
+# Команда для создания рандомного видео
 @bot.message_handler(commands=['create'])
-def create_message(message):
-    bot.send_message(message.chat.id, "Создаю случайное видео...")
+def create_random_video(message):
+    try:
+        video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(('.mp4', '.avi'))]
+        
+        if len(video_files) < 2:
+            bot.reply_to(message, "Недостаточно видео для создания.")
+            return
 
-    # Генерация случайного видео
-    output_file = "output.mp4"
-    create_random_video(output_file)
+        # Рандомно выбираем от 2 до 5 видео
+        selected_videos = random.sample(video_files, random.randint(2, 5))
+        video_clips = []
 
-    # Отправка видео пользователю
-    with open(output_file, "rb") as video:
-        bot.send_video(message.chat.id, video)
+        # Для каждого видео выбираем случайное время отрезка для использования
+        for video_file in selected_videos:
+            clip = VideoFileClip(os.path.join(VIDEO_DIR, video_file))
+            max_duration = clip.duration
+            start_time = random.uniform(0, max_duration / 2)
+            end_time = random.uniform(max_duration / 2, max_duration)
+            
+            # Обрезаем видео по случайным временам
+            video_clips.append(clip.subclip(start_time, end_time))
+
+        # Объединяем все клипы в одно видео
+        final_clip = concatenate_videoclips(video_clips)
+        output_path = os.path.join(VIDEO_DIR, 'output.mp4')
+        final_clip.write_videofile(output_path)
+
+        # Отправляем готовое видео
+        with open(output_path, 'rb') as video:
+            bot.send_video(message.chat.id, video)
+
+    except Exception as e:
+        bot.reply_to(message, f"Произошла ошибка: {e}")
 
 # Запуск бота
 bot.polling()
-, MessageHandler, filters
-from moviepy.editor import VideoFileClip, concatenate_videoclips
-
-# Папка с видеофайлами
-VIDEO_FOLDER = "videos"
-
-# Функция для создания случайного видео
-def create_random_video(output_file):
-    # Получаем все видеофайлы из папки
-    video_files = [os.path.join(VIDEO_FOLDER, f) for f in os.listdir(VIDEO_FOLDER) if f.endswith(".mp4")]
-
-    # Выбираем случайное количество видео
-    random_videos = random.sample(video_files, random.randint(2, len(video_files)))
-
-    clips = []
-    for video in random_videos:
-        clip = VideoFileClip(video)
-        # Устанавливаем случайное время воспроизведения для каждого видео
-        duration = random.uniform(1, min(clip.duration, 10))  # случайная длина отрезка (1-10 секунд)
-        start_time = random.uniform(0, clip.duration - duration)
-        clip = clip.subclip(start_time, start_time + duration)
-        clips.append(clip)
-
-    # Объединяем все клипы в один
-    final_clip = concatenate_videoclips(clips, method="compose")
-    final_clip.write_videofile(output_file, codec="libx264")
-
-# Функция для обработки команды /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Отправь /create для создания случайного видео.")
-
-# Функция для создания видео и отправки пользователю
-async def create(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Создаю случайное видео...")
-
-    # Генерация случайного видео
-    output_file = "output.mp4"
-    create_random_video(output_file)
-
-    # Отправка видео пользователю
-    with open(output_file, "rb") as video:
-        await update.message.reply_video(video)
-
-# Основная функция запуска бота
-async def main():
-    bot_token = "7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro"  # Замените на токен вашего бота
-    application = ApplicationBuilder().token(bot_token).build()
-
-    # Обработчики команд
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("create", create))
-
-    # Запуск бота
-    await application.run_polling()
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
