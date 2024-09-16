@@ -1,1 +1,2 @@
-pip install pytelegrambotapi moviepy
+pyTelegramBotAPI==4.5.1
+moviepy==1.0.3
