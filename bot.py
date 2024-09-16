@@ -1,7 +1,60 @@
 import random
 import os
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypesimport os
+import random
+import telebot
+from moviepy.editor import VideoFileClip, concatenate_videoclips
+
+# Папка с видеофайлами
+VIDEO_FOLDER = "videos"
+
+# Инициализация бота
+bot_token = "7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro"  # Замените на токен вашего бота
+bot = telebot.TeleBot(bot_token)
+
+# Функция для создания случайного видео
+def create_random_video(output_file):
+    # Получаем все видеофайлы из папки
+    video_files = [os.path.join(VIDEO_FOLDER, f) for f in os.listdir(VIDEO_FOLDER) if f.endswith(".mp4")]
+
+    # Выбираем случайное количество видео
+    random_videos = random.sample(video_files, random.randint(2, len(video_files)))
+
+    clips = []
+    for video in random_videos:
+        clip = VideoFileClip(video)
+        # Устанавливаем случайное время воспроизведения для каждого видео
+        duration = random.uniform(1, min(clip.duration, 10))  # случайная длина отрезка (1-10 секунд)
+        start_time = random.uniform(0, clip.duration - duration)
+        clip = clip.subclip(start_time, start_time + duration)
+        clips.append(clip)
+
+    # Объединяем все клипы в один
+    final_clip = concatenate_videoclips(clips, method="compose")
+    final_clip.write_videofile(output_file, codec="libx264")
+
+# Обработчик команды /start
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id, "Привет! Отправь команду /create, чтобы создать случайное видео.")
+
+# Обработчик команды /create
+@bot.message_handler(commands=['create'])
+def create_message(message):
+    bot.send_message(message.chat.id, "Создаю случайное видео...")
+
+    # Генерация случайного видео
+    output_file = "output.mp4"
+    create_random_video(output_file)
+
+    # Отправка видео пользователю
+    with open(output_file, "rb") as video:
+        bot.send_video(message.chat.id, video)
+
+# Запуск бота
+bot.polling()
+, MessageHandler, filters
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 # Папка с видеофайлами
