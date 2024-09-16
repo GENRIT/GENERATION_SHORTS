@@ -1,1 +1,1 @@
-pip install python-telegram-bot moviepy
+pip install pytelegrambotapi moviepy
