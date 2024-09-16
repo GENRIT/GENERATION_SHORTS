@@ -17,7 +17,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Шаг 2: Установка Python
+    # Шаг 2: Установка Python 3.9
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
@@ -27,12 +27,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install python-telegram-bot moviepy
+        pip install pytelegrambotapi moviepy flake8
 
     # Шаг 4: Линтинг (Проверка кода)
     - name: Run linter (flake8)
       run: |
-        pip install flake8
         flake8 bot.py
 
     # Шаг 5: Тестирование (при необходимости можно добавить тесты)
