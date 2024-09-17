@@ -2,7 +2,7 @@ import telebot
 import os
 import random
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
-from moviepy import video as mpvideo
+from moviepy.video.fx import colorx  # Импортируем фильтр colorx
 from PIL import Image
 
 # Инициализация бота с вашим токеном
@@ -42,7 +42,7 @@ def create_random_video(message):
             subclip = clip.subclip(start_time, end_time)
             
             # Применяем фильтр сине-черного оттенка
-            subclip = subclip.fx(mpvideo.vfx.colorx, 0.7)  # Уменьшаем яркость
+            subclip = subclip.fx(colorx, 0.7)  # Уменьшаем яркость
             video_clips.append(subclip)
         
         # Объединяем все клипы в одно видео
