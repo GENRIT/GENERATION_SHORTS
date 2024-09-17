@@ -1,7 +1,8 @@
 import telebot
 import os
 import random
-from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
+from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
+from PIL import Image
 
 # Инициализация бота с вашим токеном
 API_TOKEN = '7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro'
@@ -10,6 +11,7 @@ bot = telebot.TeleBot(API_TOKEN)
 # Путь к директории с видео и музыкой
 VIDEO_DIR = 'videos'  # В эту папку загружаются видеофайлы
 MUSIC_DIR = 'music'   # Папка с музыкой
+IMAGE_PATH = 'image/logo.png'  # Путь к логотипу
 
 # Команда start
 @bot.message_handler(commands=['start'])
@@ -40,6 +42,16 @@ def create_random_video(message):
         
         # Объединяем все клипы в одно видео
         final_clip = concatenate_videoclips(video_clips)
+        
+        # Загружаем логотип
+        logo = ImageClip(IMAGE_PATH).set_duration(final_clip.duration)
+        
+        # Устанавливаем позицию логотипа (центр снизу)
+        logo = logo.resize(height=50)  # Изменить размер логотипа
+        logo = logo.set_position(("center", "bottom"))
+        
+        # Наложение логотипа на видео
+        final_clip = CompositeVideoClip([final_clip, logo])
         
         # Выбираем случайную музыку из папки MUSIC_DIR
         music_files = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav'))]
