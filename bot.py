@@ -2,8 +2,8 @@ import telebot
 import os
 import random
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
-from moviepy.video.fx.all import colorx
-from PIL import Image, ImageFilter
+from moviepy import video as mpvideo
+from PIL import Image
 
 # Инициализация бота с вашим токеном
 API_TOKEN = '7407917160:AAGsC0Fo6tdiHzGXwWG-LKjvUdPEBL1Ipro'
@@ -14,13 +14,7 @@ VIDEO_DIR = 'videos'  # В эту папку загружаются видеоф
 MUSIC_DIR = 'music'   # Папка с музыкой
 IMAGE_PATH = 'image/logo.png'  # Путь к логотипу
 
-# Функция для применения размытия по краям
-def apply_blur(image):
-    pil_image = Image.fromarray(image)
-    blurred_image = pil_image.filter(ImageFilter.GaussianBlur(15))  # Размытие с радиусом 15
-    return blurred_image
-
-# Команда /start
+# Команда start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Привет! Отправь команду /create для создания рандомного видео.")
@@ -37,59 +31,57 @@ def create_random_video(message):
         # Рандомно выбираем от 2 до 5 видео
         selected_videos = random.sample(video_files, random.randint(2, 5))
         video_clips = []
-
+        
         # Для каждого видео выбираем случайное время отрезка для использования и убираем звук
         for video_file in selected_videos:
             clip = VideoFileClip(os.path.join(VIDEO_DIR, video_file)).without_audio()
             max_duration = clip.duration
             start_time = random.uniform(0, max_duration / 2)
             end_time = random.uniform(max_duration / 2, max_duration)
+            # Обрезаем видео по случайным временам
             subclip = clip.subclip(start_time, end_time)
             
-            # Применяем размытие по краям и сине-черный тон
-            subclip = subclip.fl_image(apply_blur)  # Размытие по краям
-            subclip = colorx(subclip, 0.3)  # Сине-черный тон (уменьшение яркости до 30%)
-
+            # Применяем фильтр сине-черного оттенка
+            subclip = subclip.fx(mpvideo.vfx.colorx, 0.7)  # Уменьшаем яркость
             video_clips.append(subclip)
-
+        
         # Объединяем все клипы в одно видео
         final_clip = concatenate_videoclips(video_clips)
-
+        
         # Загружаем логотип
         logo = ImageClip(IMAGE_PATH).set_duration(final_clip.duration)
-
+        
         # Увеличиваем размер логотипа
         logo = logo.resize(height=100)
-
+        
         # Устанавливаем позицию логотипа выше
         logo = logo.set_position(("center", "top"))
-
+        
         # Наложение логотипа на видео
         final_clip = CompositeVideoClip([final_clip, logo])
-
+        
         # Выбираем случайную музыку из папки MUSIC_DIR
         music_files = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav'))]
         if not music_files:
             bot.reply_to(message, "Нет доступных музыкальных файлов.")
             return
-
+        
         selected_music = random.choice(music_files)
         audio = AudioFileClip(os.path.join(MUSIC_DIR, selected_music)).volumex(0.1)  # Уменьшаем громкость до 10%
-
+        
         # Обрезаем аудио до длины видео
         audio = audio.subclip(0, final_clip.duration)
-
+        
         # Добавляем аудио к видео
         final_clip = final_clip.set_audio(audio)
-
+        
         # Сохраняем итоговое видео
         output_path = os.path.join(VIDEO_DIR, 'output.mp4')
         final_clip.write_videofile(output_path)
-
+        
         # Отправляем готовое видео
         with open(output_path, 'rb') as video:
             bot.send_video(message.chat.id, video)
-    
     except Exception as e:
         bot.reply_to(message, f"Произошла ошибка: {e}")
 
