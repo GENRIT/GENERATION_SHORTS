@@ -1,7 +1,7 @@
 import telebot
 import os
 import random
-from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip, TextClip
+from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
 from PIL import Image
 
 # Инициализация бота с вашим токеном
@@ -18,18 +18,9 @@ IMAGE_PATH = 'image/logo.png'  # Путь к логотипу
 def send_welcome(message):
     bot.reply_to(message, "Привет! Отправь команду /create для создания рандомного видео.")
 
-# Команда для создания рандомного видео с текстом
+# Команда для создания рандомного видео
 @bot.message_handler(commands=['create'])
 def create_random_video(message):
-    try:
-        # Запрос на получение текста от пользователя
-        msg = bot.reply_to(message, "Отправь текст, который ты хочешь добавить к видео:")
-        bot.register_next_step_handler(msg, process_text)
-    except Exception as e:
-        bot.reply_to(message, f"Произошла ошибка: {e}")
-
-def process_text(message):
-    user_text = message.text  # Текст от пользователя
     try:
         video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(('.mp4', '.avi'))]
         if len(video_files) < 2:
@@ -46,6 +37,7 @@ def process_text(message):
             max_duration = clip.duration
             start_time = random.uniform(0, max_duration / 2)
             end_time = random.uniform(max_duration / 2, max_duration)
+            # Обрезаем видео по случайным временам
             video_clips.append(clip.subclip(start_time, end_time))
 
         # Объединяем все клипы в одно видео
@@ -53,23 +45,24 @@ def process_text(message):
 
         # Загружаем логотип
         logo = ImageClip(IMAGE_PATH).set_duration(final_clip.duration)
+
+        # Устанавливаем позицию логотипа (центр снизу)
         logo = logo.resize(height=100)  # Увеличить размер логотипа до 100 пикселей
         logo = logo.set_position(("center", "bottom"))
 
-        # Создаём текстовый клип с заданным пользователем текстом и указанием шрифта
-        text_clip = TextClip(user_text, fontsize=24, color='white', font='Arial', bg_color='black', size=final_clip.size)
-        text_clip = text_clip.set_duration(final_clip.duration).set_position(("center", "bottom"), y_offset=-110)  # Смещаем над логотипом
-
-        # Наложение логотипа и текста на видео
-        final_clip = CompositeVideoClip([final_clip, logo, text_clip])
+        # Наложение логотипа на видео
+        final_clip = CompositeVideoClip([final_clip, logo])
 
         # Выбираем случайную музыку из папки MUSIC_DIR
         music_files = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav'))]
         if not music_files:
             bot.reply_to(message, "Нет доступных музыкальных файлов.")
             return
+
         selected_music = random.choice(music_files)
         audio = AudioFileClip(os.path.join(MUSIC_DIR, selected_music)).volumex(0.1)  # Уменьшаем громкость до 10%
+
+        # Обрезаем аудио до длины видео
         audio = audio.subclip(0, final_clip.duration)
 
         # Добавляем аудио к видео
