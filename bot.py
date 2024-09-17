@@ -1,7 +1,7 @@
 import telebot
 import os
 import random
-from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip, TextClip
 from PIL import Image
 
 # Инициализация бота с вашим токеном
@@ -16,7 +16,7 @@ IMAGE_PATH = 'image/logo.png'  # Путь к логотипу
 # Команда start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Привет! Отправь команду /create для создания рандомного видео.")
+    bot.reply_to(message, "Привет! Отправь команду /create для создания рандомного видео и укажи текст в формате: /create твой_текст.")
 
 # Команда для создания рандомного видео
 @bot.message_handler(commands=['create'])
@@ -50,8 +50,18 @@ def create_random_video(message):
         logo = logo.resize(height=100)  # Увеличить размер логотипа до 100 пикселей
         logo = logo.set_position(("center", "bottom"))
 
-        # Наложение логотипа на видео
+        # Добавляем логотип к видео
         final_clip = CompositeVideoClip([final_clip, logo])
+
+        # Получаем текст от пользователя
+        user_text = message.text.replace("/create ", "")  # Убираем команду и оставляем текст
+
+        # Создаем текст с пользовательским сообщением
+        text_clip = TextClip(user_text, fontsize=70, color='white', font='Arial-Bold').set_duration(final_clip.duration)
+        text_clip = text_clip.set_position(("center", "top"))  # Размещаем текст в центре сверху
+
+        # Добавляем текст к видео
+        final_clip = CompositeVideoClip([final_clip, text_clip])
 
         # Выбираем случайную музыку из папки MUSIC_DIR
         music_files = [f for f in os.listdir(MUSIC_DIR) if f.endswith(('.mp3', '.wav'))]
