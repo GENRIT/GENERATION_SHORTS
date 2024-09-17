@@ -50,7 +50,7 @@ def create_random_video(message):
         logo = logo.resize(height=100)
         
         # Устанавливаем позицию логотипа выше
-        logo = logo.set_position(("center", "top"))
+        logo = logo.set_position(("center", "bottom"))
         
         # Наложение логотипа на видео
         final_clip = CompositeVideoClip([final_clip, logo])
