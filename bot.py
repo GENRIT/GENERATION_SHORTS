@@ -2,7 +2,6 @@ import telebot
 import os
 import random
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, CompositeVideoClip
-from moviepy.video.fx import colorx  # Импортируем фильтр colorx
 from PIL import Image
 
 # Инициализация бота с вашим токеном
@@ -39,11 +38,7 @@ def create_random_video(message):
             start_time = random.uniform(0, max_duration / 2)
             end_time = random.uniform(max_duration / 2, max_duration)
             # Обрезаем видео по случайным временам
-            subclip = clip.subclip(start_time, end_time)
-            
-            # Применяем фильтр сине-черного оттенка
-            subclip = subclip.fx(colorx, 0.7)  # Уменьшаем яркость
-            video_clips.append(subclip)
+            video_clips.append(clip.subclip(start_time, end_time))
         
         # Объединяем все клипы в одно видео
         final_clip = concatenate_videoclips(video_clips)
@@ -82,6 +77,7 @@ def create_random_video(message):
         # Отправляем готовое видео
         with open(output_path, 'rb') as video:
             bot.send_video(message.chat.id, video)
+    
     except Exception as e:
         bot.reply_to(message, f"Произошла ошибка: {e}")
 
