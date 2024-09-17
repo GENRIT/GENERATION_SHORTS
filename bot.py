@@ -47,7 +47,7 @@ def create_random_video(message):
         logo = ImageClip(IMAGE_PATH).set_duration(final_clip.duration)
 
         # Устанавливаем позицию логотипа (центр снизу)
-        logo = logo.resize(height=120)  # Увеличить размер логотипа до 100 пикселей
+        logo = logo.resize(height=130)  # Увеличить размер логотипа до 100 пикселей
         logo = logo.set_position(("center", "bottom"))
 
         # Наложение логотипа на видео
