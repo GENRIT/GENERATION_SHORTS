@@ -56,8 +56,8 @@ def process_text(message):
         logo = logo.resize(height=100)  # Увеличить размер логотипа до 100 пикселей
         logo = logo.set_position(("center", "bottom"))
 
-        # Создаём текстовый клип с заданным пользователем текстом
-        text_clip = TextClip(user_text, fontsize=24, color='white', bg_color='black', size=final_clip.size)
+        # Создаём текстовый клип с заданным пользователем текстом и указанием шрифта
+        text_clip = TextClip(user_text, fontsize=24, color='white', font='Arial', bg_color='black', size=final_clip.size)
         text_clip = text_clip.set_duration(final_clip.duration).set_position(("center", "bottom"), y_offset=-110)  # Смещаем над логотипом
 
         # Наложение логотипа и текста на видео
